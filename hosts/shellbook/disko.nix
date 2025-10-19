@@ -25,7 +25,6 @@
             content = {
               type = "luks";
               name = "cryptroot";
-              passwordFile = "/tmp/luks-pass"; 
               settings = { allowDiscards = true; }; # TRIM для NVMe
               content = {
                 type = "lvm_pv";
