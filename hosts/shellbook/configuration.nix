@@ -60,8 +60,7 @@
     xwayland.enable = true;
   };
 
-  # XDG runtime через PAM, если запускаешь Hyprland из TTY:
-  # затем входи как обычный пользователь и запускай `Hyprland`
+  # XDG runtime через PAM (запуск Hyprland из TTY)
   security.pam.services.hyprland = {};
 
   xdg.portal.enable = true;
@@ -84,6 +83,9 @@
   ############################################
   # Firmware / graphics / updates
   ############################################
+  # Свежий стек ядра (часто решает проблемы Wi-Fi на новых чипах)
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
   # Wi-Fi: прошивки + модуль Intel
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = [ pkgs.linux-firmware ];
@@ -97,7 +99,6 @@
   };
 
   services.fwupd.enable = true;
-
   hardware.cpu.intel.updateMicrocode = true;
 
   ############################################
