@@ -91,7 +91,7 @@
   boot.kernelModules = [ "iwlwifi" ];
 
   # iwd как backend для NetworkManager (вместо wpa_supplicant)
-  services.iwd.enable = true;
+  networking.wireless.iwd.enable = true;
   networking.networkmanager = {
     enable = true;
     wifi.backend = "iwd";
