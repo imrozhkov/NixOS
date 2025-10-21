@@ -13,7 +13,9 @@
     "ru_RU.UTF-8/UTF-8"
   ];
 
-  # Шрифты (кириллица + emoji + JBM Nerd)
+  ############################################
+  # Fonts
+  ############################################
   fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-emoji
@@ -22,19 +24,18 @@
   fonts.fontconfig.defaultFonts.monospace = [ "JetBrainsMono Nerd Font" ];
 
   ############################################
-  # Bootloader + LUKS
+  # Boot / LUKS
   ############################################
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # LUKS-том, созданный disko (по partlabel)
   boot.initrd.luks.devices.cryptroot = {
     device = "/dev/disk/by-partlabel/disk-main-crypt";
     allowDiscards = true;
   };
 
   ############################################
-  # Power: suspend-then-hibernate
+  # Power
   ############################################
   services.logind.lidSwitch = "suspend-then-hibernate";
   services.logind.lidSwitchDocked = "ignore";
@@ -43,7 +44,7 @@
   '';
 
   ############################################
-  # ZRAM + flakes
+  # Memory / Nix
   ############################################
   zramSwap = {
     enable = true;
@@ -52,7 +53,7 @@
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   ############################################
-  # Wayland / Hyprland (stable из nixpkgs)
+  # Wayland / Hyprland
   ############################################
   services.xserver.enable = false;
   programs.hyprland = {
@@ -60,8 +61,20 @@
     xwayland.enable = true;
   };
 
-  # XDG runtime через PAM (запуск Hyprland из TTY)
-  security.pam.services.hyprland = {};
+  services.greetd = {
+    enable = true;
+    vt = 1;
+    settings = {
+      default_session = {
+        command = "env GTK_THEME=Catppuccin-Mocha-Standard-Mauve-Dark ${pkgs.greetd.regreet}/bin/regreet";
+        user = "greeter";
+      };
+      initial_session = {
+        command = "Hyprland";
+        user = "imrozhkov";
+      };
+    };
+  };
 
   xdg.portal.enable = true;
   xdg.portal.extraPortals = with pkgs; [
@@ -81,20 +94,17 @@
   security.rtkit.enable = true;
 
   ############################################
-  # Firmware / graphics / updates
+  # Firmware / Graphics / Updates
   ############################################
-  # Свежий стек ядра (часто решает проблемы Wi-Fi на новых чипах)
-  boot.kernelPackages = pkgs.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_lts;
 
-  # Wi-Fi: прошивки + модуль Intel
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = [ pkgs.linux-firmware ];
   boot.kernelModules = [ "iwlwifi" ];
 
-  # Графический стек (замена hardware.opengl)
   hardware.graphics = {
     enable = true;
-    enable32Bit = true;  # полезно для Steam/Wine
+    enable32Bit = true;
     extraPackages = with pkgs; [ intel-media-driver ];
   };
 
@@ -102,36 +112,45 @@
   hardware.cpu.intel.updateMicrocode = true;
 
   ############################################
-  # Сеть: NM + wpa_supplicant (надёжно)
+  # Networking
   ############################################
   networking.networkmanager = {
     enable = true;
     wifi.backend = "wpa_supplicant";
   };
-  # На всякий случай гасим iwd, если был включён где-то ещё
   networking.wireless.iwd.enable = lib.mkForce false;
+
+  services.resolved = {
+    enable = true;
+    multicastDns = true;
+    llmnr = "true";
+  };
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
 
   networking.firewall.enable = true;
 
   ############################################
-  # SSH: allow from LAN only
+  # SSH
   ############################################
   services.openssh = {
     enable = true;
-    openFirewall = false; # порт 22 не открыт глобально
+    openFirewall = false;
     settings = {
       PermitRootLogin = "no";
-      PasswordAuthentication = false; # только по ключу
+      PasswordAuthentication = false;
     };
   };
-  # Разрешаем 22/tcp только из своей подсети и link-local IPv6
   networking.firewall.extraInputRules = ''
     ip  saddr 192.168.1.0/24 tcp dport 22 accept
     ip6 saddr fe80::/10      tcp dport 22 accept
   '';
 
   ############################################
-  # Users / shell
+  # Users / Shell
   ############################################
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
@@ -154,13 +173,13 @@
     obs-studio
     firefox
     kitty
+    catppuccin-gtk
   ];
 
-  # Firefox под Wayland
   environment.sessionVariables.MOZ_ENABLE_WAYLAND = "1";
 
   ############################################
   # Misc
   ############################################
-  system.stateVersion = "25.05";  # не менять при обновлениях
+  system.stateVersion = "25.05";
 }
