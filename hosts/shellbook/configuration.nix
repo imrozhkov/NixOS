@@ -13,16 +13,13 @@
     "ru_RU.UTF-8/UTF-8"
   ];
 
-  # Шрифты с поддержкой кириллицы и emoji
+  # Шрифты (кириллица + emoji + JBM Nerd)
   fonts.packages = with pkgs; [
     noto-fonts
     noto-fonts-emoji
-    nerd-fonts.jetbrains-mono 
+    nerd-fonts.jetbrains-mono
   ];
-
-  fonts.fontconfig.defaultFonts.monospace = [
-    "JetBrainsMono Nerd Font"
-  ];
+  fonts.fontconfig.defaultFonts.monospace = [ "JetBrainsMono Nerd Font" ];
 
   ############################################
   # Bootloader + LUKS
@@ -30,7 +27,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  # LUKS-том, созданный disko (имя из partlabel)
+  # LUKS-том, созданный disko (по partlabel)
   boot.initrd.luks.devices.cryptroot = {
     device = "/dev/disk/by-partlabel/disk-main-crypt";
     allowDiscards = true;
@@ -46,23 +43,26 @@
   '';
 
   ############################################
-  # ZRAM + nix flakes
+  # ZRAM + flakes
   ############################################
   zramSwap = {
     enable = true;
     memoryPercent = 75;
   };
-
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   ############################################
-  # Wayland / Hyprland
+  # Wayland / Hyprland (stable из nixpkgs)
   ############################################
   services.xserver.enable = false;
   programs.hyprland = {
     enable = true;
     xwayland.enable = true;
   };
+
+  # XDG runtime через PAM, если запускаешь Hyprland из TTY:
+  # затем входи как обычный пользователь и запускай `Hyprland`
+  security.pam.services.hyprland = {};
 
   xdg.portal.enable = true;
   xdg.portal.extraPortals = with pkgs; [
@@ -71,7 +71,7 @@
   ];
 
   ############################################
-  # Audio/Video stack
+  # Audio/Video
   ############################################
   services.pipewire = {
     enable = true;
@@ -82,40 +82,48 @@
   security.rtkit.enable = true;
 
   ############################################
-  # Firmware, graphics, updates
+  # Firmware / graphics / updates
   ############################################
-  # Wi-Fi: iwlwifi + iwd (через NetworkManager)
+  # Wi-Fi: прошивки + модуль Intel
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = [ pkgs.linux-firmware ];
-
   boot.kernelModules = [ "iwlwifi" ];
 
-  # iwd как backend для NetworkManager (вместо wpa_supplicant)
-  networking.wireless.iwd.enable = true;
-  networking.networkmanager = {
+  # Графический стек (замена hardware.opengl)
+  hardware.graphics = {
     enable = true;
-    wifi.backend = "iwd";
+    enable32Bit = true;  # полезно для Steam/Wine
+    extraPackages = with pkgs; [ intel-media-driver ];
   };
 
-  networking.firewall.enable = true;
   services.fwupd.enable = true;
 
   hardware.cpu.intel.updateMicrocode = true;
-  hardware.opengl.enable = true;
+
+  ############################################
+  # Сеть: NM + wpa_supplicant (надёжно)
+  ############################################
+  networking.networkmanager = {
+    enable = true;
+    wifi.backend = "wpa_supplicant";
+  };
+  # На всякий случай гасим iwd, если был включён где-то ещё
+  networking.wireless.iwd.enable = lib.mkForce false;
+
+  networking.firewall.enable = true;
 
   ############################################
   # SSH: allow from LAN only
   ############################################
   services.openssh = {
     enable = true;
-    openFirewall = false; # не открываем всем
+    openFirewall = false; # порт 22 не открыт глобально
     settings = {
       PermitRootLogin = "no";
-      PasswordAuthentication = false;
+      PasswordAuthentication = false; # только по ключу
     };
   };
-
-  # Разрешаем 22/tcp только из своей подсети
+  # Разрешаем 22/tcp только из своей подсети и link-local IPv6
   networking.firewall.extraInputRules = ''
     ip  saddr 192.168.1.0/24 tcp dport 22 accept
     ip6 saddr fe80::/10      tcp dport 22 accept
@@ -142,16 +150,16 @@
   environment.systemPackages = with pkgs; [
     git wget curl neovim htop tree
     btrfs-progs lvm2 cryptsetup
+    obs-studio
     firefox
     kitty
-    obs-studio
   ];
 
-  # Firefox под Wayland (Hyprland)
+  # Firefox под Wayland
   environment.sessionVariables.MOZ_ENABLE_WAYLAND = "1";
 
   ############################################
   # Misc
   ############################################
-  system.stateVersion = "25.05";  # не менять при обновлениях системы
+  system.stateVersion = "25.05";  # не менять при обновлениях
 }
