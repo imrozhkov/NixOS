@@ -66,7 +66,7 @@
     vt = 1;
     settings = {
       default_session = {
-        command = "env GTK_THEME=Catppuccin-Mocha-Standard-Mauve-Dark ${pkgs.greetd.regreet}/bin/regreet";
+        command = "env GTK_THEME=Catppuccin-Mocha-Standard-Mauve-Dark ${pkgs.regreet}/bin/regreet";
         user = "greeter";
       };
       initial_session = {
@@ -96,8 +96,6 @@
   ############################################
   # Firmware / Graphics / Updates
   ############################################
-  boot.kernelPackages = pkgs.linuxPackages_lts;
-
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = [ pkgs.linux-firmware ];
   boot.kernelModules = [ "iwlwifi" ];
@@ -131,8 +129,7 @@
 
   services.avahi = {
     enable = true;
-    nssmdns4 = true;
-    nssmdns6 = true;
+    nssmdns = true;
     openFirewall = true;
   };
 
