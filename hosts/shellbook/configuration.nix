@@ -66,7 +66,7 @@
     vt = 1;
     settings = {
       default_session = {
-        command = "env GTK_THEME=Catppuccin-Mocha-Standard-Mauve-Dark ${pkgs.regreet}/bin/regreet";
+        command = "env GTK_THEME=Catppuccin-Mocha-Standard-Mauve-Dark ${pkgs.greetd.regreet}/bin/regreet";
         user = "greeter";
       };
       initial_session = {
