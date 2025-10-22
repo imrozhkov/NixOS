@@ -117,17 +117,22 @@
   networking.networkmanager = {
     enable = true;
     wifi.backend = "wpa_supplicant";
+    dns = "systemd-resolved";
   };
   networking.wireless.iwd.enable = lib.mkForce false;
 
   services.resolved = {
     enable = true;
-    multicastDns = true;
-    llmnr = "true";
+    extraConfig = ''
+      MulticastDNS=yes
+      LLMNR=yes
+    '';
   };
+
   services.avahi = {
     enable = true;
     nssmdns4 = true;
+    nssmdns6 = true;
     openFirewall = true;
   };
 
