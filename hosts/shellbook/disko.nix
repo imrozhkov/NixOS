@@ -2,14 +2,14 @@
   disko.devices = {
     disk.main = {
       type = "disk";
-      device = "/dev/nvme0n1";            # проверьте ваш диск
+      device = "/dev/nvme0n1";
       content = {
         type = "gpt";
         partitions = {
           ESP = {
             name = "ESP";
             size = "1G";
-            type = "ef00";                 # EFI System Partition
+            type = "ef00"; 
             content = {
               type = "filesystem";
               format = "vfat";
@@ -19,13 +19,13 @@
           };
 
           crypt = {
-            name = "crypt";
+            name = "disk-main-crypt";
             size = "100%";
-            type = "8309";                 # Linux LUKS (можно и 8300, но 8309 точнее)
+            type = "8309";
             content = {
               type = "luks";
               name = "cryptroot";
-              settings = { allowDiscards = true; }; # TRIM для NVMe
+              settings = { allowDiscards = true; };
               content = {
                 type = "lvm_pv";
                 vg = "vg0";
@@ -40,7 +40,7 @@
       type = "lvm_vg";
       lvs = {
         swap = {
-          size = "22G";                    # для гибернации (16 ГБ RAM + запас)
+          size = "22G"; 
           content = { type = "swap"; resumeDevice = true; };
         };
 
@@ -49,7 +49,6 @@
           content = {
             type = "btrfs";
             extraArgs = [ "-L" "nixos" ];
-            # базовые опции (унаследуются сабвольюмами, если не переопределены)
             mountOptions = [ "compress=zstd:3" "noatime" "ssd" "space_cache=v2" ];
             subvolumes = {
               "@".mountpoint = "/";
