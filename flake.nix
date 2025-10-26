@@ -15,6 +15,7 @@
     outputs = { self, nixpkgs, nixpkgs-unstable, disko, home-manager, ... }:
         let
             system = "x86_64-linux";
+            pkgsUnstable = import nixpkgs-unstable { inherit system; }
         in {
             nixosConfigurations.shellbook = nixpkgs.lib.nixosSystem {
                 inherit system;
