@@ -1,29 +1,18 @@
-{ pkgs, pkgsUnstable, ... }: {
+{ pkgs, pkgsUnstable, lib, config, ... }: {
   home.username = "imrozhkov";
   home.homeDirectory = "/home/imrozhkov";
   home.stateVersion = "25.05";
 
   home.packages = with pkgs; [
-    neovim
-    htop
-    tree
-    obs-studio
-    firefox
-    kitty
-    fd
-    bat
-    lazygit
-    lazydocker
-    neohtop
-    wlsunset
-    duf
-    jq
+    neovim htop tree obs-studio firefox kitty fd bat
+    lazygit lazydocker neohtop wlsunset duf jq
   ] ++ [
     pkgsUnstable.rofi
   ];
 
-  home.file.".ssh".directory = true;
-  home.file.".ssh".mode = "0700";
+  home.activation.initSshDir = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    install -d -m 700 -o ${config.home.username} -g ${config.home.username} "$HOME/.ssh"
+  '';
 
   home.file.".ssh/authorized_keys" = {
     text = ''
