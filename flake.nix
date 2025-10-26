@@ -3,6 +3,7 @@
 
     inputs = {
         nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
+        nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable";
         disko.url = "github:nix-community/disko";
         
         home-manager = {
@@ -11,7 +12,7 @@
         };
     };
 
-    outputs = { self, nixpkgs, disko, home-manager, ... }:
+    outputs = { self, nixpkgs, nixpkgs-unstable, disko, home-manager, ... }:
         let
             system = "x86_64-linux";
         in {
@@ -26,6 +27,7 @@
                     home-manager.nixosModules.home-manager {
                         home-manager.useGlobalPkgs = true;
                         home-manager.useUserPackages = true;
+                        home-manager.extraSpecialArgs = { inherit pkgsUnstable; };
                         home-manager.users.imrozhkov = import ./home/imrozhkov/home.nix;
                     }
                 ];

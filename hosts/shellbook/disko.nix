@@ -19,7 +19,7 @@
           };
 
           crypt = {
-            name = "disk-main-crypt";
+            name = "crypt";
             size = "100%";
             type = "8309";
             content = {

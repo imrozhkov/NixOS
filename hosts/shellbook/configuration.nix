@@ -6,6 +6,7 @@
   ############################################
   networking.hostName = "shellbook";
   time.timeZone = "Europe/Moscow";
+  services.timesyncd.enable = true;
 
   i18n.defaultLocale = "en_US.UTF-8";
   i18n.supportedLocales = [
@@ -30,7 +31,7 @@
   boot.loader.efi.canTouchEfiVariables = true;
 
   boot.initrd.luks.devices.cryptroot = {
-    device = "/dev/disk/by-partlabel/disk-main-crypt";
+    device = "/dev/disk/by-partlabel/crypt";
     allowDiscards = true;
   };
 
@@ -40,7 +41,7 @@
   services.logind.lidSwitch = "suspend-then-hibernate";
   services.logind.lidSwitchDocked = "ignore";
   systemd.sleep.extraConfig = ''
-    HibernateDelaySec=30min
+    HibernateDelaySec=5min
   '';
 
   ############################################
@@ -48,7 +49,7 @@
   ############################################
   zramSwap = {
     enable = true;
-    memoryPercent = 75;
+    memoryPercent = 40;
   };
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
@@ -69,12 +70,22 @@
         command = "env GTK_THEME=Catppuccin-Mocha-Standard-Mauve-Dark ${pkgs.greetd.regreet}/bin/regreet";
         user = "greeter";
       };
-      initial_session = {
-        command = "Hyprland";
-        user = "imrozhkov";
-      };
+#      initial_session = {
+#        command = "Hyprland";
+#        user = "imrozhkov";
+#      };
     };
   };
+  security.pam.services.hyprlock = {};
+  systemd.user.services.hyprlock-on-sleep = {
+  Unit = { Description = "Lock on sleep"; };
+  Service = {
+    Type = "oneshot";
+    ExecStart = "${pkgs.hyprlock}/bin/hyprlock";
+  };
+  Install = { WantedBy = [ "suspend.target" "hibernate.target" "sleep.target" ]; };
+};
+
 
   xdg.portal.enable = true;
   xdg.portal.extraPortals = with pkgs; [
@@ -119,19 +130,13 @@
   };
   networking.wireless.iwd.enable = lib.mkForce false;
 
-  services.resolved = {
-    enable = true;
-    extraConfig = ''
-      MulticastDNS=yes
-      LLMNR=yes
-    '';
-  };
-
-  services.avahi = {
-    enable = true;
-    nssmdns = true;
-    openFirewall = true;
-  };
+services.resolved = {
+  enable = true;
+  extraConfig = ''
+    MulticastDNS=yes
+    LLMNR=yes
+  '';
+};
 
   networking.firewall.enable = true;
 
@@ -170,12 +175,9 @@
   # Packages
   ############################################
   environment.systemPackages = with pkgs; [
-    git wget curl neovim htop tree
-    btrfs-progs lvm2 cryptsetup
-    obs-studio
-    firefox
-    kitty
-    catppuccin-gtk
+  git wget curl
+  btrfs-progs lvm2 cryptsetup
+  catppuccin-gtk
   ];
 
   environment.sessionVariables.MOZ_ENABLE_WAYLAND = "1";
@@ -183,5 +185,13 @@
   ############################################
   # Misc
   ############################################
+  virtualisation.docker = {
+  enable = true;
+  daemon.settings = {
+    data-root = "/var/lib/docker"; 
+  };
+};
+
+
   system.stateVersion = "25.05";
 }
