@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, pkgsUnstable, ... }:
 
 {
 ##### HOST/LOCALE/TIME #####
