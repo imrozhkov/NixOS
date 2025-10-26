@@ -12,13 +12,9 @@
     "ru_RU.UTF-8/UTF-8"
   ];
 
-##### BOOT/LUKS #####
+##### BOOT #####
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-  boot.initrd.luks.devices.cryptroot = {
-    device = "/dev/disk/by-partlabel/crypt";
-    allowDiscards = true;
-  };
 
 ##### FIRMWARE/GRAPHICS/UPDATES #####
   hardware.enableRedistributableFirmware = true;
