@@ -102,15 +102,7 @@
       };
     };
   };
-  security.pam.services.hyprlock = {};
-  systemd.user.services.hyprlock-on-sleep = {
-  Unit = { Description = "Lock on sleep"; };
-  Service = {
-    Type = "oneshot";
-    ExecStart = "${pkgs.hyprlock}/bin/hyprlock";
-  };
-  wantedBy = [ "suspend.target" "hibernate.target" "sleep.target" ];
-  };
+
 
 ##### AUDIO/VIDEO #####
   services.pipewire = {
