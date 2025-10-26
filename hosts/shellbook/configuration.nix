@@ -70,7 +70,6 @@
     isNormalUser = true;
     extraGroups = [ "wheel" "video" "audio" "networkmanager" "docker" ];
     shell = pkgs.zsh;
-    # authorized_keys теперь в Home-Manager
   };
 
 ##### WAYLAND/HYPRLAND #####
@@ -93,33 +92,21 @@
     vt = 1;
     settings = {
       default_session = {
-        command = "${pkgs.hyprland}/bin/Hyprland --config /etc/greetd/hyprland-gtkgreet.conf";
         user = "greeter";
+        command = ''
+          ${pkgs.cage}/bin/cage -s -- \
+            env GTK_THEME=Adwaita:dark \
+                XDG_SESSION_TYPE=wayland \
+                XDG_CURRENT_DESKTOP=Hyprland \
+            ${pkgsUnstable.gtkgreet}/bin/gtkgreet -l \
+              --command '${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.hyprland}/bin/Hyprland'
+        '';
       };
     };
   };
 
-  # PAM для gtklock (лок-скрин)
-  security.pam.services.gtklock = { };
-
-##### GREETER FILES #####
-  # Конфиг Hyprland, который запускается только для экрана логина (gtkgreet)
-  environment.etc."greetd/hyprland-gtkgreet.conf".text = ''
-    monitor=,preferred,auto,auto
-
-    env = XDG_CURRENT_DESKTOP,Hyprland
-    env = XDG_SESSION_TYPE,wayland
-
-    exec-once = ${pkgsUnstable.gtkgreet}/bin/gtkgreet -l --command '${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.hyprland}/bin/Hyprland'
-
-    animations {
-      enabled = false
-    }
-
-    general {
-      allow_tearing = false
-    }
-  '';
+  # PAM профиль для gtklock (чтобы ввод пароля работал корректно)
+  security.pam.services.gtklock = {};
 
 ##### AUDIO/VIDEO #####
   services.pipewire = {
@@ -158,9 +145,6 @@
   environment.systemPackages = with pkgs; [
     git wget curl
     btrfs-progs lvm2 cryptsetup
-    gtklock
-  ] ++ [
-    pkgsUnstable.gtkgreet
   ];
 
 ##### ENVIRONMENT #####
