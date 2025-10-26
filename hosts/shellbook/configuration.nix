@@ -99,7 +99,7 @@
                 XDG_SESSION_TYPE=wayland \
                 XDG_CURRENT_DESKTOP=Hyprland \
             ${pkgsUnstable.gtkgreet}/bin/gtkgreet -l \
-              --command '${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.hyprland}/bin/Hyprland'
+              --command '${pkgs.hyprland}/bin/Hyprland'
         '';
       };
     };
