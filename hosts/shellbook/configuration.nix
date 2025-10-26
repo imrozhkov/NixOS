@@ -1,9 +1,7 @@
 { config, pkgs, lib, ... }:
 
 {
-  ############################################
-  # Host / locale / time
-  ############################################
+##### HOST/LOCALE/TIME #####
   networking.hostName = "shellbook";
   time.timeZone = "Europe/Moscow";
   services.timesyncd.enable = true;
@@ -14,115 +12,27 @@
     "ru_RU.UTF-8/UTF-8"
   ];
 
-  ############################################
-  # Fonts
-  ############################################
-  fonts.packages = with pkgs; [
-    noto-fonts
-    noto-fonts-emoji
-    nerd-fonts.jetbrains-mono
-  ];
-  fonts.fontconfig.defaultFonts.monospace = [ "JetBrainsMono Nerd Font" ];
-
-  ############################################
-  # Boot / LUKS
-  ############################################
+##### BOOT/LUKS #####
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
-
   boot.initrd.luks.devices.cryptroot = {
     device = "/dev/disk/by-partlabel/crypt";
     allowDiscards = true;
   };
 
-  ############################################
-  # Power
-  ############################################
-  services.logind.lidSwitch = "suspend-then-hibernate";
-  services.logind.lidSwitchDocked = "ignore";
-  systemd.sleep.extraConfig = ''
-    HibernateDelaySec=5min
-  '';
-
-  ############################################
-  # Memory / Nix
-  ############################################
-  zramSwap = {
-    enable = true;
-    memoryPercent = 40;
-  };
-  nix.settings.experimental-features = [ "nix-command" "flakes" ];
-
-  ############################################
-  # Wayland / Hyprland
-  ############################################
-  services.xserver.enable = false;
-  programs.hyprland = {
-    enable = true;
-    xwayland.enable = true;
-  };
-
-  services.greetd = {
-    enable = true;
-    vt = 1;
-    settings = {
-      default_session = {
-        command = "env GTK_THEME=Catppuccin-Mocha-Standard-Mauve-Dark ${pkgs.greetd.regreet}/bin/regreet";
-        user = "greeter";
-      };
-#      initial_session = {
-#        command = "Hyprland";
-#        user = "imrozhkov";
-#      };
-    };
-  };
-  security.pam.services.hyprlock = {};
-  systemd.user.services.hyprlock-on-sleep = {
-  Unit = { Description = "Lock on sleep"; };
-  Service = {
-    Type = "oneshot";
-    ExecStart = "${pkgs.hyprlock}/bin/hyprlock";
-  };
-  Install = { WantedBy = [ "suspend.target" "hibernate.target" "sleep.target" ]; };
-};
-
-
-  xdg.portal.enable = true;
-  xdg.portal.extraPortals = with pkgs; [
-    xdg-desktop-portal-hyprland
-    xdg-desktop-portal-gtk
-  ];
-
-  ############################################
-  # Audio/Video
-  ############################################
-  services.pipewire = {
-    enable = true;
-    alsa.enable = true;
-    pulse.enable = true;
-    jack.enable = true;
-  };
-  security.rtkit.enable = true;
-
-  ############################################
-  # Firmware / Graphics / Updates
-  ############################################
+##### FIRMWARE/GRAPHICS/UPDATES #####
   hardware.enableRedistributableFirmware = true;
   hardware.firmware = [ pkgs.linux-firmware ];
   boot.kernelModules = [ "iwlwifi" ];
-
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
     extraPackages = with pkgs; [ intel-media-driver ];
   };
-
   services.fwupd.enable = true;
   hardware.cpu.intel.updateMicrocode = true;
 
-  ############################################
-  # Networking
-  ############################################
+##### NETWORKING #####
   networking.networkmanager = {
     enable = true;
     wifi.backend = "wpa_supplicant";
@@ -130,19 +40,23 @@
   };
   networking.wireless.iwd.enable = lib.mkForce false;
 
-services.resolved = {
-  enable = true;
-  extraConfig = ''
-    MulticastDNS=yes
-    LLMNR=yes
-  '';
-};
+##### DNS/RESOLVED #####
+  services.resolved = {
+    enable = true;
+    extraConfig = ''
+      MulticastDNS=yes
+      LLMNR=yes
+    '';
+  };
 
+##### FIREWALL #####
   networking.firewall.enable = true;
+  networking.firewall.extraInputRules = ''
+    ip  saddr 192.168.1.0/24 tcp dport 22 accept
+    ip6 saddr fe80::/10      tcp dport 22 accept
+  '';
 
-  ############################################
-  # SSH
-  ############################################
+##### SSH #####
   services.openssh = {
     enable = true;
     openFirewall = true;
@@ -151,14 +65,8 @@ services.resolved = {
       PasswordAuthentication = false;
     };
   };
-  networking.firewall.extraInputRules = ''
-    ip  saddr 192.168.1.0/24 tcp dport 22 accept
-    ip6 saddr fe80::/10      tcp dport 22 accept
-  '';
 
-  ############################################
-  # Users / Shell
-  ############################################
+##### USERS/SHELL #####
   programs.zsh.enable = true;
   users.defaultUserShell = pkgs.zsh;
 
@@ -166,32 +74,94 @@ services.resolved = {
     isNormalUser = true;
     extraGroups = [ "wheel" "video" "audio" "networkmanager" "docker" ];
     shell = pkgs.zsh;
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJd4G7+N8wOlLdpI44TrtgQ4bl8o+oVL5/4YWbw1PxEo imrozhkov@wsl"
-    ];
+    # authorized_keys теперь в Home-Manager
   };
 
-  ############################################
-  # Packages
-  ############################################
-  environment.systemPackages = with pkgs; [
-  git wget curl
-  btrfs-progs lvm2 cryptsetup
-  catppuccin-gtk
+##### WAYLAND/HYPRLAND #####
+  services.xserver.enable = false;
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+  };
+
+##### XDG PORTALS #####
+  xdg.portal.enable = true;
+  xdg.portal.extraPortals = with pkgs; [
+    xdg-desktop-portal-hyprland
+    xdg-desktop-portal-gtk
   ];
 
+##### LOGIN & LOCK #####
+  services.greetd = {
+    enable = true;
+    vt = 1;
+    settings = {
+      default_session = {
+        command = "${pkgs.greetd.regreet}/bin/regreet"; # убран GTK_THEME
+        user = "greeter";
+      };
+    };
+  };
+  security.pam.services.hyprlock = {};
+  systemd.user.services.hyprlock-on-sleep = {
+    Unit = { Description = "Lock on sleep"; };
+    Service = {
+      Type = "oneshot";
+      ExecStart = "${pkgs.hyprlock}/bin/hyprlock";
+    };
+    Install = { WantedBy = [ "suspend.target" "hibernate.target" "sleep.target" ]; };
+  };
+
+##### AUDIO/VIDEO #####
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    pulse.enable = true;
+    jack.enable = true;
+  };
+  security.rtkit.enable = true;
+
+##### POWER #####
+  services.logind.lidSwitch = "suspend-then-hibernate";
+  services.logind.lidSwitchDocked = "ignore";
+  systemd.sleep.extraConfig = ''
+    HibernateDelaySec=5min
+  '';
+
+##### MEMORY #####
+  zramSwap = {
+    enable = true;
+    memoryPercent = 40;
+  };
+
+##### NIX FEATURES #####
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
+
+##### FONTS #####
+  fonts.packages = with pkgs; [
+    noto-fonts
+    noto-fonts-emoji
+    nerd-fonts.jetbrains-mono
+  ];
+  fonts.fontconfig.defaultFonts.monospace = [ "JetBrainsMono Nerd Font" ];
+
+##### PACKAGES #####
+  environment.systemPackages = with pkgs; [
+    git wget curl
+    btrfs-progs lvm2 cryptsetup
+  ];
+
+##### ENVIRONMENT #####
   environment.sessionVariables.MOZ_ENABLE_WAYLAND = "1";
 
-  ############################################
-  # Misc
-  ############################################
+##### CONTAINERS #####
   virtualisation.docker = {
-  enable = true;
-  daemon.settings = {
-    data-root = "/var/lib/docker"; 
+    enable = true;
+    daemon.settings = {
+      data-root = "/var/lib/docker";
+    };
   };
-};
 
-
+##### MISC #####
   system.stateVersion = "25.05";
 }
