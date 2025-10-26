@@ -18,6 +18,7 @@
     in {
       nixosConfigurations.shellbook = nixpkgs.lib.nixosSystem {
         inherit system;
+        specialArgs = { inherit pkgsUnstable; };
 
         modules = [
           disko.nixosModules.disko

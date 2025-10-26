@@ -110,8 +110,7 @@
     env = XDG_CURRENT_DESKTOP,Hyprland
     env = XDG_SESSION_TYPE,wayland
 
-    # gtkgreet с автозапуском пользовательской сессии Hyprland после логина
-    exec-once = ${pkgs.gtkgreet}/bin/gtkgreet -l --command '${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.hyprland}/bin/Hyprland'
+    exec-once = ${pkgsUnstable.gtkgreet}/bin/gtkgreet -l --command '${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.hyprland}/bin/Hyprland'
 
     animations {
       enabled = false
@@ -159,6 +158,9 @@
   environment.systemPackages = with pkgs; [
     git wget curl
     btrfs-progs lvm2 cryptsetup
+    gtklock
+  ] ++ [
+    pkgsUnstable.gtkgreet
   ];
 
 ##### ENVIRONMENT #####
