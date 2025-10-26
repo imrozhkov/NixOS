@@ -93,12 +93,34 @@
     vt = 1;
     settings = {
       default_session = {
-        command = "${pkgs.greetd.regreet}/bin/regreet"; # убран GTK_THEME
+        command = "${pkgs.hyprland}/bin/Hyprland --config /etc/greetd/hyprland-gtkgreet.conf";
         user = "greeter";
       };
     };
   };
 
+  # PAM для gtklock (лок-скрин)
+  security.pam.services.gtklock = { };
+
+##### GREETER FILES #####
+  # Конфиг Hyprland, который запускается только для экрана логина (gtkgreet)
+  environment.etc."greetd/hyprland-gtkgreet.conf".text = ''
+    monitor=,preferred,auto,auto
+
+    env = XDG_CURRENT_DESKTOP,Hyprland
+    env = XDG_SESSION_TYPE,wayland
+
+    # gtkgreet с автозапуском пользовательской сессии Hyprland после логина
+    exec-once = ${pkgs.gtkgreet}/bin/gtkgreet -l --command '${pkgs.dbus}/bin/dbus-run-session -- ${pkgs.hyprland}/bin/Hyprland'
+
+    animations {
+      enabled = false
+    }
+
+    general {
+      allow_tearing = false
+    }
+  '';
 
 ##### AUDIO/VIDEO #####
   services.pipewire = {
